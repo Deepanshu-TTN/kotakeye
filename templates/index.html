@@ -177,7 +177,6 @@
 
 {% block extra_js %}
 <script>
-    // Enable analyze button only when at least one preset is selected
     document.addEventListener('DOMContentLoaded', function() {
         const checkboxes = document.querySelectorAll('input[name="presets"]');
         const analyzeBtn = document.getElementById('analyzeBtn');
@@ -197,25 +196,6 @@
             checkbox.addEventListener('change', updateButtonState);
         });
         
-        // Make entire card clickable for better UX
-        const presetCards = document.querySelectorAll('.preset-card');
-        presetCards.forEach(function(card) {
-            card.addEventListener('click', function(e) {
-                // Don't trigger if clicking on the delete button
-                if (e.target.tagName === 'A' || e.target.closest('a')) {
-                    return;
-                }
-                
-                const checkbox = this.querySelector('input[type="checkbox"]');
-                checkbox.checked = !checkbox.checked;
-                
-                // Manually trigger change event
-                const event = new Event('change');
-                checkbox.dispatchEvent(event);
-            });
-        });
-        
-        // Fix for submitting form with GET params
         document.getElementById('presetForm').addEventListener('submit', function(e) {
             e.preventDefault();
             

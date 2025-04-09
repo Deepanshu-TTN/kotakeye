@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.views import View
 from django.views.generic import CreateView
 from django.views.decorators.cache import never_cache
+from django.http import Http404
 from analyzer.models import Preset
 from analyzer.forms import DateRangePresetForm, KeywordSearchPresetForm, AmountFilterPresetForm
 from analyzer.utils import get_pdf_df, analyze_amount_filter, analyze_date_range, analyze_keywords
@@ -38,6 +39,7 @@ class IndexView(View):
                 df = get_pdf_df(pdf_file, password)
                 if df is not None:
                     df_json = df.to_json(orient='records', date_format='iso')
+                    print(df_json)
                     dfs.append(json.loads(df_json))
                     pdf_count += 1
             except Exception as e:
@@ -67,7 +69,7 @@ class IndexView(View):
         
 
 class CreatePresetView(CreateView):
-    template_name = ''
+    template_name = 'create_preset.html'
     form_class = None
     title = ''
     preset_type = ''
@@ -77,15 +79,12 @@ class CreatePresetView(CreateView):
 
         if self.preset_type == 'date_range':
             self.form_class = DateRangePresetForm
-            self.template_name = 'create_preset_date.html'
             self.title = 'Create Date Range Preset'
         elif self.preset_type == 'keyword_search':
             self.form_class = KeywordSearchPresetForm
-            self.template_name = 'create_preset_keyword.html'
             self.title = 'Create Keyword Search Preset'
         elif self.preset_type == 'amount_filter':
             self.form_class = AmountFilterPresetForm
-            self.template_name = 'create_preset_amount.html'
             self.title = 'Create Amount Filter Preset'
         else:
             messages.error(request, f"Invalid preset type: {self.preset_type}", extra_tags='danger')
@@ -105,13 +104,14 @@ class CreatePresetView(CreateView):
         messages.success(self.request, f"Preset '{preset.name}' created successfully")
         return redirect('index')
 
-    def form_invalid(self, form):
-        return self.render_to_response(self.get_context_data(form=form))
     
     
 def delete_preset(request, id):
-    preset = get_object_or_404(Preset, pk=id)
-    preset.delete()
+    try:
+        preset = get_object_or_404(Preset, pk=id)
+        preset.delete()
+    except Http404:
+        messages.error(request, f"Preset does not exist with id: {id}", extra_tags='danger')
     return redirect('index')
     
     
@@ -146,7 +146,7 @@ def results(request):
     
     for preset_id in selected_preset_ids:
         try:
-            preset = Preset.objects.get(id=preset_id)
+            preset = get_object_or_404(Preset, pk=preset_id)
             lock = threading.Lock()
             
             if preset.preset_type == 'date_range':
@@ -169,8 +169,8 @@ def results(request):
                     'result': analysis_result,
                 })
             
-        except Preset.DoesNotExist:
-            continue
+        except Http404:
+            messages.warning(request, f"Preset does not exist with id: {id}")
         except Exception as e:
             messages.error(request, f"Error analyzing with preset '{preset.name}': {str(e)}", extra_tags='danger')
     

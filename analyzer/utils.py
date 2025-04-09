@@ -18,7 +18,6 @@ def get_pdf_df(pdf_file, password=None):
         matches = re.findall(pattern, text)
         
         for match in matches:
-            print(match)
             date, narration, reference, amount, balance = match
             
             amount_val = float(amount.split('(')[0].replace(',',''))
@@ -65,11 +64,11 @@ def amount_filter(df, amount, comparison_type):
         return (df[(df['Withdrawal'] == amount) | (df['Deposit'] == amount)], 
                 f"equal to {amount}")
         
-      elif comparison_type == 'lt':
+      elif comparison_type == 'gt':
           return (df[(df['Withdrawal'] < amount) & (df['Withdrawal'] > 0) | 
                           (df['Deposit'] < amount) & (df['Deposit'] > 0)],
                   f"less than {amount}")
-      elif comparison_type == 'gt':
+      elif comparison_type == 'lt':
           return (df[(df['Withdrawal'] > amount) | (df['Deposit'] > amount)],
                   f"greater than {amount}")
       else:
