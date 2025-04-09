@@ -9,8 +9,8 @@ class Preset(models.Model):
     
     COMPARISONS = [
         ('=', "Equals"),
-        ('lt', "Greater Than"),
-        ('gt', "Less Than"),
+        ('gt', "Greater Than"),
+        ('lt', "Less Than"),
     ]
     
     DEFAULT_IMAGE = 'images/default.png'

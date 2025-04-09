@@ -64,18 +64,18 @@ def amount_filter(df, amount, comparison_type):
         return (df[(df['Withdrawal'] == amount) | (df['Deposit'] == amount)], 
                 f"equal to {amount}")
         
-      elif comparison_type == 'gt':
+      elif comparison_type == 'lt':
           return (df[(df['Withdrawal'] < amount) & (df['Withdrawal'] > 0) | 
                           (df['Deposit'] < amount) & (df['Deposit'] > 0)],
                   f"less than {amount}")
-      elif comparison_type == 'lt':
+      elif comparison_type == 'gt':
           return (df[(df['Withdrawal'] > amount) | (df['Deposit'] > amount)],
                   f"greater than {amount}")
       else:
           return None
       
       
-def analyze_date_range(df, start, end, lock):
+def analyze_date_range(df, start, end):
     if df is None or df.empty:
         return None
     
@@ -96,23 +96,22 @@ def analyze_date_range(df, start, end, lock):
         'Deposit': 'sum'
     })
 
-    with lock:
-        ax = daily_totals.plot.bar(
-            width=0.8,
-            figsize=(10, 5),
-            alpha=0.6,
-            stacked=False  
-        )
+    ax = daily_totals.plot.bar(
+        width=0.8,
+        figsize=(10, 5),
+        alpha=0.6,
+        stacked=False  
+    )
 
-        ax.set_title('Daily Transaction Flow')
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Amount')
-        ax.legend(['Deposits', 'Withdrawals'])
-        
-        buffer = BytesIO()
-        ax.figure.savefig(buffer, format='png')
-        buffer.seek(0)
-        chart_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    ax.set_title('Daily Transaction Flow')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Amount')
+    ax.legend(['Deposits', 'Withdrawals'])
+    
+    buffer = BytesIO()
+    ax.figure.savefig(buffer, format='png')
+    buffer.seek(0)
+    chart_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
     
     return {
         'transaction_count': len(filtered_df),
@@ -124,7 +123,7 @@ def analyze_date_range(df, start, end, lock):
     }
     
 
-def analyze_keywords(df, keywords:str, lock):
+def analyze_keywords(df, keywords:str):
     if df is None or df.empty or not keywords:
         return None
     
@@ -151,23 +150,22 @@ def analyze_keywords(df, keywords:str, lock):
     'Deposit': 'sum'
     })  
     
-    with lock:
-        ax = distribution.plot.bar(
-        width=0.8,
-        figsize=(10, 5),
-        alpha=0.6,
-        stacked=False,
-        color = ['red', 'blue']
-        )
+    ax = distribution.plot.bar(
+    width=0.8,
+    figsize=(10, 5),
+    alpha=0.6,
+    stacked=False,
+    color = ['red', 'blue']
+    )
 
-        ax.set_title('Daily Transaction Flow')
-        ax.set_xlabel('Keyword')
-        ax.set_ylabel('Amount')
-        
-        buffer = BytesIO()
-        ax.figure.savefig(buffer, format='png')
-        buffer.seek(0)
-        chart_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    ax.set_title('Daily Transaction Flow')
+    ax.set_xlabel('Keyword')
+    ax.set_ylabel('Amount')
+    
+    buffer = BytesIO()
+    ax.figure.savefig(buffer, format='png')
+    buffer.seek(0)
+    chart_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
     
     keyword_stats = [{
         'keyword': keyword,
@@ -188,7 +186,7 @@ def analyze_keywords(df, keywords:str, lock):
     }
     
     
-def analyze_amount_filter(df, amount, comparison_type, lock):
+def analyze_amount_filter(df, amount, comparison_type):
     if df is None or df.empty:
         return None
     try:
@@ -213,18 +211,19 @@ def analyze_amount_filter(df, amount, comparison_type, lock):
     amounts_series = pd.DataFrame(all_amounts)
     # ax = filtered_df[['Withdrawal', 'Deposit']].plot.hist(alpha=0.7, figsize=(10, 5), stacked=False)
     # print(filtered_df[['Withdrawal', 'Deposit']])
-    with lock:
-        ax = amounts_series.plot.hist(bins=20, alpha=0.7, figsize=(10, 5), stacked=False)
+    ax = amounts_series.plot.hist(bins=20, alpha=0.7, figsize=(10, 5), legend=False)
 
-        ax.axvline(x=amount, color='r', linestyle='--', label=f'Filter amount: {amount}')
-        ax.set_title(f'Distribution of Transaction Amounts {comparison_text}')
-        ax.set_xlabel('Amount')
-        ax.set_ylabel('Frequency')
-        
-        buffer = BytesIO()
-        ax.figure.savefig(buffer, format='png')
-        buffer.seek(0)
-        chart_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    ax.axvline(x=amount, color='r', linestyle='--', label=f'Filter amount: {amount}')
+    ax.set_title(f'Distribution of Transaction Amounts {comparison_text}')
+    ax.set_xlabel('Amount')
+    ax.set_ylabel('Frequency')
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles=handles[1:], labels=labels[1:])
+    
+    buffer = BytesIO()
+    ax.figure.savefig(buffer, format='png')
+    buffer.seek(0)
+    chart_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
     
     return {
         'transaction_count': len(filtered_df),

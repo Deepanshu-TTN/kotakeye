@@ -9,7 +9,6 @@ from analyzer.forms import DateRangePresetForm, KeywordSearchPresetForm, AmountF
 from analyzer.utils import get_pdf_df, analyze_amount_filter, analyze_date_range, analyze_keywords
 import json
 import pandas as pd
-import threading
 
 class IndexView(View):
     def get(self, request, *args, **kwargs):
@@ -147,19 +146,18 @@ def results(request):
     for preset_id in selected_preset_ids:
         try:
             preset = get_object_or_404(Preset, pk=preset_id)
-            lock = threading.Lock()
             
             if preset.preset_type == 'date_range':
                 analysis_result = analyze_date_range(
-                    combined_df, preset.start_date, preset.end_date, lock
+                    combined_df, preset.start_date, preset.end_date
                 )
                 
             elif preset.preset_type == 'keyword':
-                analysis_result = analyze_keywords(combined_df, preset.keywords, lock)
+                analysis_result = analyze_keywords(combined_df, preset.keywords)
                 
             elif preset.preset_type == 'amount_filter':
                 analysis_result = analyze_amount_filter(
-                    combined_df, preset.amount_value, preset.comparison_type, lock
+                    combined_df, preset.amount_value, preset.comparison_type
                 )
                 
             
@@ -170,7 +168,7 @@ def results(request):
                 })
             
         except Http404:
-            messages.warning(request, f"Preset does not exist with id: {id}")
+            messages.warning(request, f"Preset does not exist with id: {preset_id}")
         except Exception as e:
             messages.error(request, f"Error analyzing with preset '{preset.name}': {str(e)}", extra_tags='danger')
     

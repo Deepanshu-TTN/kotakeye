@@ -45,7 +45,13 @@
 
 <form method="post" action="{% url 'results' %}" id="presetForm">
     {% csrf_token %}
-    
+    <div class="row m-3">
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn" disabled>
+                Analyze Bank Statements
+            </button>
+        </div>
+    </div>
     <div class="row">
         <!-- Date Range Presets -->
         <div class="col-md-4 mb-4">
@@ -164,13 +170,6 @@
         </div>
     </div>
     
-    <div class="row mt-3">
-        <div class="col-12 text-center">
-            <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn" disabled>
-                Analyze Bank Statements
-            </button>
-        </div>
-    </div>
 </form>
 
 {% endblock %}
