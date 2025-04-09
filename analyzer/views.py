@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views import View
 from django.views.generic import CreateView
-from django.views.decorators.cache import never_cache
 from django.http import Http404
 from analyzer.models import Preset
 from analyzer.forms import DateRangePresetForm, KeywordSearchPresetForm, AmountFilterPresetForm
@@ -112,9 +111,13 @@ def delete_preset(request, id):
     except Http404:
         messages.error(request, f"Preset does not exist with id: {id}", extra_tags='danger')
     return redirect('index')
+
+
+def clear_session(request):
+    request.session.pop('dataframes')
+    return redirect('index')
     
     
-@never_cache
 def results(request):
     session_dataframes = request.session.get('dataframes', [])
     if not session_dataframes:
